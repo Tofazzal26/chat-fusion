@@ -1,5 +1,7 @@
 import { Rajdhani } from "next/font/google";
 import "./globals.css";
+import Navbar from "./components/Navbar/page";
+import Sidebar from "./components/Sidebar/page";
 
 export const metadata = {
   title: "Chat Fusion",
@@ -11,7 +13,15 @@ const rajdhani = Rajdhani({ subsets: ["latin"], weight: "600" });
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${rajdhani.className}`}>{children}</body>
+      <body className={`${rajdhani.className}`}>
+        <Navbar />
+        <div className="flex">
+          <div className="w-[300px] lg:block hidden">
+            <Sidebar />
+          </div>
+          <div className="flex-1">{children}</div>
+        </div>
+      </body>
     </html>
   );
 }

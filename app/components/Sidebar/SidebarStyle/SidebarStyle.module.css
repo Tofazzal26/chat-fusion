@@ -1,0 +1,8 @@
+.buttonHover:hover {
+  background-color: #e9e0ff;
+  transition: 0.2s ease-in-out;
+}
+
+.buttonHover {
+  transition: 0.2s ease-in-out;
+}
