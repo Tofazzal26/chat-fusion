@@ -15,6 +15,8 @@ import AdbIcon from "@mui/icons-material/Adb";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
 
 const pages = ["Chat", "History", "Stone", "Support"];
 const settings = ["Profile", "Account", "Dashboard", "Logout"];
@@ -22,6 +24,11 @@ const settings = ["Profile", "Account", "Dashboard", "Logout"];
 const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = useState(null);
   const [anchorElUser, setAnchorElUser] = useState(null);
+  const pathname = usePathname();
+  const session = useSession();
+  const { email } = session?.data?.user || {};
+  console.log(session);
+  console.log(email);
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -39,7 +46,7 @@ const Navbar = () => {
   };
 
   return (
-    <div>
+    <div className={pathname === "/api/login" ? "hidden" : ""}>
       <AppBar position="static" sx={{ backgroundColor: "#fafafa" }}>
         <Container maxWidth="2xl">
           <Toolbar disableGutters>
@@ -130,35 +137,52 @@ const Navbar = () => {
             </Typography>
 
             <Box sx={{ flexGrow: 0 }}>
-              <Tooltip title="Open settings">
-                <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                  <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
-                </IconButton>
-              </Tooltip>
-              <Menu
-                sx={{ mt: "45px" }}
-                id="menu-appbar"
-                anchorEl={anchorElUser}
-                anchorOrigin={{
-                  vertical: "top",
-                  horizontal: "right",
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "right",
-                }}
-                open={Boolean(anchorElUser)}
-                onClose={handleCloseUserMenu}
-              >
-                {settings.map((setting) => (
-                  <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                    <Typography sx={{ textAlign: "center" }}>
-                      {setting}
-                    </Typography>
-                  </MenuItem>
-                ))}
-              </Menu>
+              {session?.status === "authenticated" ? (
+                <>
+                  <Tooltip title="Open settings">
+                    <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                      <Avatar alt="Remy Sharp" src="/profile.png" />
+                    </IconButton>
+                  </Tooltip>
+                  <Menu
+                    sx={{ mt: "45px" }}
+                    id="menu-appbar"
+                    anchorEl={anchorElUser}
+                    anchorOrigin={{
+                      vertical: "top",
+                      horizontal: "right",
+                    }}
+                    keepMounted
+                    transformOrigin={{
+                      vertical: "top",
+                      horizontal: "right",
+                    }}
+                    open={Boolean(anchorElUser)}
+                    onClose={handleCloseUserMenu}
+                  >
+                    <div
+                      className="px-3 text-gray-600"
+                      onClick={handleCloseUserMenu}
+                    >
+                      <h2>{email}</h2>
+                      <button
+                        onClick={() => signOut()}
+                        className="text-red-400 cursor-pointer text-center w-full"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </Menu>
+                </>
+              ) : session?.status === "loading" ? (
+                <div className="w-8 h-8 border-4 border-dashed rounded-full animate-spin border-[#6f23fd]"></div>
+              ) : (
+                <Link href="/api/login">
+                  <button className="bg-[#6f23fd] px-4 py-2 rounded-sm cursor-pointer">
+                    Login
+                  </button>
+                </Link>
+              )}
             </Box>
           </Toolbar>
         </Container>
