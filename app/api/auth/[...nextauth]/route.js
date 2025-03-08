@@ -29,7 +29,7 @@ const handler = NextAuth({
           currentUser = await UserModel.create(userData);
         }
         if (!currentUser || !currentUser.password) {
-          return console.log("user not found");
+          return null;
         }
         const passwordMatched = bcrypt.compareSync(
           password,
