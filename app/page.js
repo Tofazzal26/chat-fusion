@@ -59,8 +59,11 @@ export default function Home() {
       );
 
       const userQuestion = JSON.parse(resp?.config?.data);
-      console.log(userQuestion);
-
+      const HistoryData = { question: userQuestion, answer: formatData };
+      const history = await axios.post(
+        "http://localhost:3000/api/UserHistory",
+        HistoryData
+      );
       setResponse((prev) => [
         ...prev,
         { question: userQuestion.question, answer: formatData },
@@ -77,8 +80,6 @@ export default function Home() {
       handleSubmit();
     }
   };
-
-  console.log(response);
 
   return (
     <div className="grid grid-rows-4 h-screen">

@@ -27,8 +27,6 @@ const Navbar = () => {
   const pathname = usePathname();
   const session = useSession();
   const { email } = session?.data?.user || {};
-  console.log(session);
-  console.log(email);
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
