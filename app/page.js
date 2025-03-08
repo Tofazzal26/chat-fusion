@@ -3,11 +3,13 @@
 import axios from "axios";
 import { ChevronDown, CirclePlus, Clock, Link, Mic, Send } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-
+import { useState } from "react";
+import toast from "react-hot-toast";
+import { motion } from "framer-motion";
 export default function Home() {
   const [question, setQuestion] = useState("");
   const [response, setResponse] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const formatText = (text) => {
     if (!text) return null;
@@ -15,12 +17,11 @@ export default function Home() {
     const lines = text
       .trim()
       .split("\n")
-      .filter((line) => line.trim() !== ""); // খালি লাইন বাদ
+      .filter((line) => line.trim() !== "");
 
     const result = [];
 
     lines.forEach((line, index) => {
-      // শিরোনাম এবং কন্টেন্ট আলাদা করা
       const match = line.match(/^\*\*(\d+)\.\*\*\s?"([^"]+)"/);
 
       if (match) {
@@ -44,27 +45,31 @@ export default function Home() {
 
   const handleSubmit = async () => {
     if (question.trim() === "") {
-      alert("Enter Value");
-      return;
+      return toast.error("Write someting");
     }
+    setLoading(true);
+    try {
+      const resp = await axios.post(`http://localhost:3000/api/chat`, {
+        question,
+      });
+      setQuestion("");
 
-    const resp = await axios.post(`http://localhost:3000/api/chat`, {
-      question,
-    });
+      const formatData = formatText(
+        resp?.data?.data?.choices[0]?.message?.content
+      );
 
-    const formatData = formatText(
-      resp?.data?.data?.choices[0]?.message?.content
-    );
+      const userQuestion = JSON.parse(resp?.config?.data);
+      console.log(userQuestion);
 
-    const userQuestion = JSON.parse(resp?.config?.data);
-    console.log(userQuestion);
-    const finalData = [...formatData, userQuestion];
-    setResponse((prev) => [
-      ...prev,
-      { question: userQuestion.question, answer: formatData },
-    ]);
-
-    setQuestion("");
+      setResponse((prev) => [
+        ...prev,
+        { question: userQuestion.question, answer: formatData },
+      ]);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
   };
   const handleKeyDown = (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -77,7 +82,7 @@ export default function Home() {
 
   return (
     <div className="grid grid-rows-4 h-screen">
-      <div className="row-span-1">
+      <div className={`row-span-1 ${response.length > 0 ? "hidden" : ""}`}>
         <div className="mt-4 lg:mt-6">
           <h2 className="text-xl lg:text-5xl text-center">
             Hello There!👋 What can I help with?
@@ -88,7 +93,11 @@ export default function Home() {
           </p>
         </div>
       </div>
-      <div className="row-span-1 lg:row-span-2 lg:w-[1300px] mx-auto overflow-y-scroll">
+      <div
+        className={`lg:px-0 px-2  ${
+          response.length > 0 ? "row-span-3" : "row-span-2"
+        } w-full lg:w-[1300px] mx-auto overflow-y-scroll`}
+      >
         <div className="">
           {response?.map((item, index) => (
             <div key={index}>
@@ -99,9 +108,15 @@ export default function Home() {
               </div>
               <div>
                 {item?.answer?.map((item, index) => (
-                  <h2 className="my-4" key={index}>
+                  <motion.h2
+                    key={index}
+                    className="my-2"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.2 }}
+                  >
                     {item?.title}
-                  </h2>
+                  </motion.h2>
                 ))}
               </div>
             </div>
@@ -123,12 +138,15 @@ export default function Home() {
           </div>
           <div className="mt-3 relative">
             <textarea
-              className="border-[1px] border-gray-200 rounded-md px-12 py-3 outline-none w-full"
+              className={`border-[1px] border-gray-200 rounded-md px-12 py-3 outline-none w-full ${
+                loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
               placeholder="Ask a question..."
               rows={3}
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               onKeyDown={handleKeyDown}
+              disabled={loading}
             />
             <span className="text-gray-600 absolute left-4 top-4">
               <Link size={18} />
@@ -138,7 +156,10 @@ export default function Home() {
             </span>
             <button
               onClick={handleSubmit}
-              className="text-gray-600 absolute right-4 top-4 hover:text-[#6f23fd] cursor-pointer"
+              disabled={loading}
+              className={`text-gray-600 absolute right-4 top-4 hover:text-[#6f23fd] cursor-pointer ${
+                loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               <Send size={18} />
             </button>
